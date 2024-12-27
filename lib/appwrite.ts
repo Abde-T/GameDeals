@@ -24,9 +24,9 @@ export const config = {
   agentsCollectionId: process.env.EXPO_PUBLIC_APPWRITE_AGENTS_COLLECTION_ID,
   propertiesCollectionId:
     process.env.EXPO_PUBLIC_APPWRITE_PROPERTIES_COLLECTION_ID,
-  favGamesCollectionId: process.env.EXPO_PUBLIC_APPWRITE_FAV_GAMES_COLLECTION_ID,
-
-  };
+  favGamesCollectionId:
+    process.env.EXPO_PUBLIC_APPWRITE_FAV_GAMES_COLLECTION_ID,
+};
 
 export const client = new Client();
 client
@@ -68,6 +68,17 @@ export async function login() {
   } catch (error) {
     console.error(error);
     return false;
+  }
+}
+
+export async function getUserId() {
+  const user = await account.get();
+  if (user) {
+    return user.$id;
+  } else {
+    // Handle the case where "userId" is missing
+    console.warn('User object does not contain a "userId" property');
+    return null; // Or return an appropriate default value
   }
 }
 
@@ -206,8 +217,8 @@ export async function getGames(title: string | undefined) {
 }
 
 export async function getGameById(id: string | undefined) {
-    console.log("id", id);
-  
+  console.log("id", id);
+
   try {
     const response = await axios.get(
       `https://www.cheapshark.com/api/1.0/games?id=${id}`
@@ -243,15 +254,34 @@ export async function getStoreById(storeId: string) {
   }
 }
 
-export async function  fetchFavoriteGames(){
+export async function fetchFavoriteGames(userId: string) {
   try {
     const response = await databases.listDocuments(
       config.databaseId!,
-      config.favGamesCollectionId!
+      config.favGamesCollectionId!,
+      [Query.equal("userId", userId)]
     );
     return response.documents; // This contains an array of your documents
   } catch (error) {
     console.error("Error fetching favorite games:", error);
     return [];
   }
-};
+}
+
+export async function deleteGame(documentId: string) {
+  console.log('gameID:', documentId);
+
+  try {
+    const response = await databases.deleteDocument(
+      config.databaseId!,
+      config.favGamesCollectionId!,
+      documentId
+    );
+
+    console.log('Document deleted successfully:', response);
+    return response; 
+  } catch (error) {
+    console.error('Error deleting document:', error);
+    throw error; // Re-throw the error for proper handling in the calling code
+  }
+}

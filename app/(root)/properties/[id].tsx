@@ -1,10 +1,11 @@
 import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
-import { config, databases, getGameById, getStoreById } from "@/lib/appwrite";
+import { config, databases, getGameById, getStoreById, getUserId } from "@/lib/appwrite";
 import { SafeAreaView } from "react-native-safe-area-context";
 import icons from "@/constants/icons";
 import { ID } from "react-native-appwrite";
+import { openAuthSessionAsync } from "expo-web-browser";
 
 type Game = {
   info: {
@@ -64,8 +65,11 @@ const Property = () => {
   }
 
   const handlePress = async (title: string, thumb: string) => {
+    const userId = await getUserId()
+    console.log("userId", userId);
+
     try {
-      console.log("handlePress");
+      console.log("id",id.toString());
       const property = await databases.createDocument(
         config.databaseId!,
         config.favGamesCollectionId!,
@@ -73,6 +77,8 @@ const Property = () => {
         {
           title: title, // Use the title passed as an argument
           thumb: thumb, // Use the thumb passed as an argument
+          userId: userId,
+          gameID: id.toString()
         }
       );
       console.log("Document created:", property);
